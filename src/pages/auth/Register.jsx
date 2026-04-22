@@ -5,13 +5,13 @@ import MapView from "../../components/MapView";
 
 function Register() {
   const navigate = useNavigate();
-
   const goBack = () => navigate(-1);
 
   // 🔹 FORM DATA
   const [formData, setFormData] = useState({
     orgName: "",
-    orgType: "Hospital",
+    orgType: "Mall",
+    registrationId: "", // Mandatory
     email: "",
     phone: "",
     address: "",
@@ -19,6 +19,12 @@ function Register() {
     contactPerson: "",
     emergencyContact: "",
     website: "",
+    // New Fields
+    startTime: "09:00",
+    endTime: "21:00",
+    is24Hours: false,
+    totalFloors: "1",
+    securityStaffCount: "",
   });
 
   const [city, setCity] = useState("");
@@ -32,14 +38,14 @@ function Register() {
 
   const [radius, setRadius] = useState(50);
 
-  // 🔹 OTP
+  // 🔹 OTP & CONSENT
   const [agreed, setAgreed] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(30);
   const [otpVerified, setOtpVerified] = useState(false);
 
-  // 🔹 FEATURES (checkboxes)
+  // 🔹 FEATURES
   const [features, setFeatures] = useState({
     cctv: false,
     fireSafety: false,
@@ -48,39 +54,28 @@ function Register() {
     evacuationPlan: false,
   });
 
-  // 🔹 LOCATION SELECT
   const handleLocationSelect = (data) => {
     setCity(data.city || "");
     setState(data.state || "");
-
     if (data.lat && data.lng) {
       setCoords({ lat: data.lat, lng: data.lng });
     }
   };
 
-  // 🔥 GET DEVICE LOCATION
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation not supported");
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        setCoords({ lat, lng });
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
-      (err) => {
-        console.log(err);
-        alert("Location access denied");
-      },
+      () => alert("Location access denied"),
       { enableHighAccuracy: true }
     );
   };
 
-  // 🔹 OTP TIMER
   useEffect(() => {
     let interval;
     if (showOTP && timer > 0) {
@@ -89,7 +84,6 @@ function Register() {
     return () => clearInterval(interval);
   }, [showOTP, timer]);
 
-  // 🔹 HANDLERS
   const handleContinue = () => {
     if (agreed) {
       setShowOTP(true);
@@ -103,7 +97,6 @@ function Register() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!otpVerified) return;
 
     const payload = {
@@ -116,260 +109,208 @@ function Register() {
     };
 
     console.log("FINAL DATA:", payload);
-
     navigate("/dashboard");
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-
-      {/* 🔥 LEFT PANEL REDESIGN */}
-      <div className="w-1/3 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-10 flex flex-col justify-between">
+    <div className="min-h-screen flex bg-gray-50 overflow-hidden">
+      {/* LEFT PANEL */}
+      <div className="fixed h-screen w-1/3 left-0 top-0 bg-gradient-to-br from-blue-700 to-indigo-900 text-white p-10 flex flex-col justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-4">ZeroNet</h1>
-          <p className="text-lg font-medium">Emergency Response Network</p>
-          <p className="text-sm mt-4 opacity-80">
-            Register your organization to enable smart alerts, geofencing,
-            and rapid response coordination.
+          <h1 className="text-4xl font-extrabold mb-4 tracking-tight">ZeroNet</h1>
+          <p className="text-xl font-light">The Crisis Coordination Bridge</p>
+          <div className="h-1 w-12 bg-blue-400 my-6"></div>
+          <p className="text-sm opacity-80 leading-relaxed">
+            Onboard your venue to the ZeroNet mesh network. Enable localized emergency broadcasts and instant responder dispatching.
           </p>
         </div>
-
-        <div className="text-xs opacity-70">
-          📍 Live Tracking <br />
-          🚨 Instant Alerts <br />
-          🛡️ Secure Network
+        <div className="space-y-3 text-sm font-medium opacity-70">
+          <p>✔ Verified Organization Node</p>
+          <p>✔ Real-time Geofence Alerts</p>
+          <p>✔ ML-Powered Incident Analysis</p>
         </div>
       </div>
 
-      {/* 🔹 RIGHT PANEL */}
-      <div className="flex-1 p-10">
-        <h1 className="text-2xl font-bold mb-4">Organization Setup</h1>
+      {/* RIGHT PANEL */}
+      <div className="ml-[33.333333%] w-[66.666667%] h-screen p-12 overflow-y-auto">
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Organization Setup</h2>
+        <p className="text-gray-500 mb-8">Please provide your official venue details to join the network.</p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 🔹 SECTION 1: IDENTITY */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Basic Information</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Organization Name *</label>
+                <input
+                  required
+                  placeholder="e.g. Grand Plaza Mall"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(e) => setFormData({ ...formData, orgName: e.target.value })}
+                />
+              </div>
 
-          {/* 🔹 BASIC */}
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              placeholder="Organization Name"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({ ...formData, orgName: e.target.value })
-              }
-            />
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Venue Type *</label>
+                <select
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  value={formData.orgType}
+                  onChange={(e) => setFormData({ ...formData, orgType: e.target.value })}
+                >
+                  <option value="Mall">Shopping Mall</option>
+                  <option value="Hotel">Hotel / Resort</option>
+                  <option value="Hospital">Hospital / Medical Center</option>
+                  <option value="Restaurant">Restaurant / Bar</option>
+                  <option value="Office">Corporate Office</option>
+                  <option value="Stadium">Stadium / Arena</option>
+                  <option value="Educational">School / University</option>
+                </select>
+              </div>
 
-            <select
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({ ...formData, orgType: e.target.value })
-              }
-            >
-              <option>Hospital</option>
-              <option>Mall</option>
-              <option>Hotel</option>
-              <option>Restaurant</option>
-              <option>Office</option>
-            </select>
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Registration ID / GSTIN *</label>
+                <input
+                  required
+                  placeholder="Official ID Number"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none border-blue-100 bg-blue-50/30"
+                  onChange={(e) => setFormData({ ...formData, registrationId: e.target.value })}
+                />
+              </div>
 
-            <input
-              type="email"
-              placeholder="Email"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="Phone"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-            />
+              <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Official Website</label>
+                <input
+                  placeholder="https://"
+                  className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* 🔹 EXTRA */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <input
-              placeholder="Full Address"
-              className="p-3 border rounded col-span-2"
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="License ID"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({ ...formData, license: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="Contact Person"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  contactPerson: e.target.value,
-                })
-              }
-            />
-
-            <input
-              placeholder="Emergency Contact"
-              className="p-3 border rounded"
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  emergencyContact: e.target.value,
-                })
-              }
-            />
-
-            <input
-              placeholder="Website"
-              className="p-3 border rounded col-span-2"
-              onChange={(e) =>
-                setFormData({ ...formData, website: e.target.value })
-              }
-            />
-          </div>
-
-          {/* 🔹 LOCATION */}
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <LocationAutocomplete
-              placeholder="City"
-              onSelect={handleLocationSelect}
-              className="p-3 border rounded"
-            />
-
-            <input
-              placeholder="State"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="p-3 border rounded"
-            />
-
-            <input placeholder="PIN" className="p-3 border rounded" />
-
-            {/* 🔥 LAT LNG BACK */}
-            <input
-              placeholder="Latitude"
-              value={coords.lat}
-              readOnly
-              className="p-3 border rounded"
-            />
-
-            <input
-              placeholder="Longitude"
-              value={coords.lng}
-              readOnly
-              className="p-3 border rounded"
-            />
-
-            <button
-              type="button"
-              onClick={handleGetLocation}
-              className="bg-blue-600 text-white rounded"
-            >
-              Get Location
-            </button>
-          </div>
-
-          {/* MAP */}
-          <div className="h-64 mt-4">
-            <MapView center={coords} radius={radius} />
-          </div>
-
-          {/* RADIUS */}
-          <input
-            type="range"
-            min="10"
-            max="150"
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full mt-4"
-          />
-          <p>{radius} metres</p>
-
-          {/* 🔹 FEATURES */}
-          <div className="mt-6">
-            <p className="font-medium mb-2">Available Facilities</p>
-
-            {Object.keys(features).map((key) => (
-              <label key={key} className="block text-sm">
+          {/* 🔹 SECTION 2: OPERATIONAL HOURS */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Operational Timing</h3>
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer bg-gray-100 px-4 py-2 rounded-lg">
                 <input
                   type="checkbox"
-                  checked={features[key]}
-                  onChange={() =>
-                    setFeatures({
-                      ...features,
-                      [key]: !features[key],
-                    })
-                  }
-                />{" "}
-                {key}
+                  className="w-4 h-4 text-blue-600"
+                  checked={formData.is24Hours}
+                  onChange={(e) => setFormData({ ...formData, is24Hours: e.target.checked })}
+                />
+                <span className="font-medium text-gray-700">Open 24/7</span>
               </label>
-            ))}
+
+              {!formData.is24Hours && (
+                <div className="flex items-center gap-3 animate-fadeIn">
+                  <input
+                    type="time"
+                    className="p-2 border rounded-md"
+                    value={formData.startTime}
+                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  />
+                  <span className="text-gray-400">to</span>
+                  <input
+                    type="time"
+                    className="p-2 border rounded-md"
+                    value={formData.endTime}
+                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* CONSENT */}
-          <div className="mt-6">
-            <label>
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={() => setAgreed(!agreed)}
-              />
-              I confirm all details are correct.
+          {/* 🔹 SECTION 3: CONTACTS */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+             <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Admin Email *</label>
+                <input type="email" required placeholder="admin@org.com" className="p-3 border rounded-lg" onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+             </div>
+             <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Primary Phone *</label>
+                <input required placeholder="Phone number" className="p-3 border rounded-lg" onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+             </div>
+             <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Emergency Contact (24/7) *</label>
+                <input required placeholder="Security Room Number" className="p-3 border rounded-lg border-red-100" onChange={(e) => setFormData({ ...formData, emergencyContact: e.target.value })} />
+             </div>
+             <div className="flex flex-col">
+                <label className="text-sm font-medium mb-1">Security Staff Count</label>
+                <input type="number" placeholder="Total guards" className="p-3 border rounded-lg" onChange={(e) => setFormData({ ...formData, securityStaffCount: e.target.value })} />
+             </div>
+          </div>
+
+          {/* 🔹 SECTION 4: LOCATION & GEOFENCE */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Venue Geofencing</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <LocationAutocomplete placeholder="Search Venue Location" onSelect={handleLocationSelect} className="p-3 border rounded-lg col-span-2" />
+              <button type="button" onClick={handleGetLocation} className="bg-indigo-50 text-indigo-700 font-semibold rounded-lg border border-indigo-100 hover:bg-indigo-100 transition">
+                Pin Current Location
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 italic text-xs text-gray-500">
+              <p>Lat: {coords.lat || "N/A"}</p>
+              <p>Lng: {coords.lng || "N/A"}</p>
+              <p>State: {state || "N/A"}</p>
+            </div>
+
+            <div className="h-72 rounded-xl overflow-hidden border">
+              <MapView center={coords} radius={radius} />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-gray-700">Geofence Radius (Bridge Range)</label>
+                <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">{radius} meters</span>
+              </div>
+              <input type="range" min="10" max="150" value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+            </div>
+          </div>
+
+          {/* 🔹 SUBMIT SECTION */}
+          <div className="bg-gray-100 p-6 rounded-xl flex flex-col items-center space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" checked={agreed} onChange={() => setAgreed(!agreed)} className="w-5 h-5" />
+              <span className="text-gray-700 font-medium text-sm">I verify that this organization is authorized to use ZeroNet.</span>
             </label>
 
-            <button
-              type="button"
-              disabled={!agreed}
-              onClick={handleContinue}
-              className="block mt-2 bg-blue-600 text-white px-4 py-2"
-            >
-              Continue
-            </button>
-          </div>
-
-          {/* OTP */}
-          {showOTP && (
-            <div className="mt-6">
-              <p>OTP sent to {formData.email}</p>
-
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="Enter OTP"
-              />
-
-              <button type="button" onClick={handleVerifyOTP}>
-                Verify OTP
+            {!showOTP ? (
+              <button
+                type="button"
+                disabled={!agreed || !formData.registrationId}
+                onClick={handleContinue}
+                className={`w-full py-4 rounded-xl font-bold text-lg transition ${agreed && formData.registrationId ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+              >
+                Verify & Continue
               </button>
+            ) : (
+              <div className="w-full space-y-4 animate-slideUp">
+                <div className="flex gap-2">
+                  <input
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit OTP"
+                    className="flex-1 p-3 border rounded-lg text-center tracking-widest font-mono text-xl"
+                  />
+                  <button type="button" onClick={handleVerifyOTP} className="bg-green-600 text-white px-6 rounded-lg font-bold">Verify</button>
+                </div>
+                <p className="text-center text-sm text-gray-500">
+                  {timer > 0 ? `Resend available in ${timer}s` : <span className="text-blue-600 cursor-pointer font-bold">Resend OTP Now</span>}
+                </p>
+              </div>
+            )}
 
-              <p>
-                {timer > 0
-                  ? `Resend in ${timer}s`
-                  : "Resend OTP"}
-              </p>
-            </div>
-          )}
-
-          {/* BUTTONS */}
-          <div className="flex justify-between mt-6">
-            <button type="button" onClick={goBack}>
-              Back
-            </button>
-
-            <button type="submit" disabled={!otpVerified}>
-              Submit
-            </button>
+            {otpVerified && (
+              <button type="submit" className="w-full py-4 bg-black text-white rounded-xl font-bold text-lg hover:opacity-90 transition">
+                Finalize Registration
+              </button>
+            )}
           </div>
-
         </form>
       </div>
     </div>
